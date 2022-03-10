@@ -7,6 +7,7 @@ interface CostInterface
     public function getDetails(): array;
 }
 
+
 class BasketCostDecorator implements CostInterface
 {
     public function getCost(): int
@@ -29,13 +30,27 @@ class BasketCostDecorator implements CostInterface
     }
 }
 
-class BasketWithShippingDecorator implements CostInterface
+abstract class AbstractDecoration implements CostInterface
 {
-    private CostInterface $basketCost;
+    protected CostInterface $basketCost;
     public function __construct(CostInterface $basketCost)
     {
         $this->basketCost = $basketCost;
     }
+    public function getTotalCost(): int
+    {
+        return $this->basketCost->getTotalCost() + static::getCost();
+    }
+    public function getDetails(): array
+    {
+        return $this->basketCost->getDetails() + [
+            static::getDescription() => static::getCost()
+        ];
+    }
+}
+
+class BasketWithShippingDecorator extends AbstractDecoration
+{
     public function getCost(): int
     {
         return 15000;
@@ -44,25 +59,10 @@ class BasketWithShippingDecorator implements CostInterface
     {
         return "Shipping cost";
     }
-    public function getTotalCost(): int
-    {
-        return $this->basketCost->getTotalCost() + self::getCost();
-    }
-    public function getDetails(): array
-    {
-        return $this->basketCost->getDetails() + [
-            self::getDescription() => self::getCost()
-        ];
-    }
 }
 
-class BasketWithTaxationDecorator implements CostInterface
+class BasketWithTaxationDecorator extends AbstractDecoration
 {
-    private CostInterface $basketCost;
-    public function __construct(CostInterface $basketCost)
-    {
-        $this->basketCost = $basketCost;
-    }
     public function getCost(): int
     {
         return $this->basketCost->getTotalCost() * 0.09;
@@ -71,17 +71,20 @@ class BasketWithTaxationDecorator implements CostInterface
     {
         return "Taxation Cost";
     }
-    public function getTotalCost(): int
+}
+
+class PackageDecorator extends AbstractDecoration
+{
+    public function getCost(): int
     {
-        return self::getCost();
+        return $this->basketCost->getTotalCost() * 0.09;
     }
-    public function getDetails(): array
+    public function getDescription(): string
     {
-        return $this->basketCost->getDetails() + [
-            self::getDescription() => self::getCost()
-        ];
+        return "Packag Cost";
     }
 }
+
 
 $basketCost = new BasketCostDecorator;
 
@@ -89,5 +92,5 @@ $basketWithTaxation = new BasketWithTaxationDecorator($basketCost);
 
 $basketWithShipping = new BasketWithShippingDecorator($basketCost);
 
-$BasketWithShippingAndTaxation = new BasketWithShippingDecorator(new BasketWithTaxationDecorator($basketCost));
+$BasketWithShippingAndTaxation = new BasketWithShippingDecorator(new BasketWithTaxationDecorator(new PackageDecorator($basketCost)));
 var_dump($BasketWithShippingAndTaxation->getDetails());
