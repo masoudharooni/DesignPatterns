@@ -86,6 +86,3 @@ class BasketCostWithShippingAndTaxation extends basketWithTaxation
         ];
     }
 }
-
-
-var_dump((new BasketCostWithShippingAndTaxation)->getDetails());
