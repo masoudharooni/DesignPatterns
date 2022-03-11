@@ -1,16 +1,30 @@
 <?php
 class SmsSender
 {
-    public function send()
+    public function sendNotification()
     {
         echo "SMS sent!" . PHP_EOL;
     }
 }
 
+class AdapterSmsSender
+{
+    private SmsSender $mainSmsSendor;
+    public function __construct(SmsSender $smsSendor)
+    {
+        $this->mainSmsSendor = $smsSendor;
+    }
+    public function send()
+    {
+        $this->mainSmsSendor->sendNotification();
+    }
+}
+
+
 class user
 {
-    private SmsSender $smsSendor;
-    public function __construct(SmsSender $smsSendor)
+    private AdapterSmsSender $smsSendor;
+    public function __construct(AdapterSmsSender $smsSendor)
     {
         $this->smsSendor = $smsSendor;
     }
@@ -23,8 +37,8 @@ class user
 
 class payment
 {
-    private SmsSender $smsSendor;
-    public function __construct(SmsSender $smsSendor)
+    private AdapterSmsSender $smsSendor;
+    public function __construct(AdapterSmsSender $smsSendor)
     {
         $this->smsSendor = $smsSendor;
     }
@@ -34,6 +48,6 @@ class payment
         $this->smsSendor->send();
     }
 }
-
-$payment = new payment(new SmsSender);
+$smsSendor = new SmsSender;
+$payment = new payment(new AdapterSmsSender($smsSendor));
 $payment->pay();
